@@ -1,0 +1,2951 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+ \setcounter{section}{3} 
+\numberwithin{equation}{section}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 1
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1cm
+\rightmargin 1cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Section
+Development of the point-process filtering and SS-GLM
+\end_layout
+
+\begin_layout Subsection
+The CIF (rate function)
+\end_layout
+
+\begin_layout Standard
+We examine the spike trains that a neuron elicits in all the trials in the
+ experiment and built a raster plot.
+ In a steady state, we could simply average in each time bin and get a PSTH.
+ When learning occurs this is impossible.
+ Instead we define a rate function (single trial 
+\begin_inset Quotes eld
+\end_inset
+
+PSTH
+\begin_inset Quotes erd
+\end_inset
+
+) for trial #k and time bin #l of size
+\begin_inset Formula $\Delta$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\lambda_{k}\left(l|\theta_{k},\gamma,H_{k}\right)=\exp\left\{ \sum_{r=1}^{R}\theta_{k,r}g_{,r}\left(l\right)\right\} \exp\left\{ \sum_{j=1}^{l}\gamma_{j}n_{k,l-j}\right\} 
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+ is a vector of the 
+\begin_inset Quotes eld
+\end_inset
+
+PSTH
+\begin_inset Quotes erd
+\end_inset
+
+ in trial #k
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $g_{r}\left(l\right)=\begin{cases}
+\begin{array}{c}
+1\\
+0
+\end{array} & \begin{array}{c}
+\left(r-1\right)\cdot\frac{T}{R}<l\le r\cdot\frac{T}{R}\\
+otherwise
+\end{array}\end{cases}$
+\end_inset
+
+, 
+\begin_inset Formula $T$
+\end_inset
+
+ being the numner of bins in each trial (each bin of duration 
+\begin_inset Formula $\Delta$
+\end_inset
+
+ typically 1mSec) and 
+\begin_inset Formula $R$
+\end_inset
+
+ being the number of PSTH bins.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\gamma$
+\end_inset
+
+ is a vector of the self - history dependence
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $H_{k}$
+\end_inset
+
+ is the history (of spiking) and in our case it is the binary vector 
+\begin_inset Formula $n_{k}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+The log-likelihood function
+\end_layout
+
+\begin_layout Standard
+The probability of observing 
+\begin_inset Formula $n_{k}$
+\end_inset
+
+ spikes in trial #k and time bin #l is simply 
+\begin_inset Formula $p\left(N_{k}\left(l\right)=n_{k}\left(l\right)\right)=\left(\lambda_{k}\left(l\right)\cdot\Delta\right)^{n_{k}\left(l\right)}\cdot\left(1-\lambda_{k}\left(l\right)\cdot\Delta\right)^{1-n_{k}\left(l\right)}\approx\frac{\left(\lambda_{k}\left(l\right)\Delta\right)^{n_{k}\left(l\right)}\cdot\exp\left(-\lambda_{k}\left(l\right)\Delta\right)}{n_{k}\left(l\right)!}$
+\end_inset
+
+.
+ The Poisson approximation is valid for 
+\begin_inset Formula $n_{k}=0,1$
+\end_inset
+
+ and 
+\begin_inset Formula $\lambda\Delta\ll1$
+\end_inset
+
+.
+ Thus, the log-likelihood of a single time bin is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\log p\left(N_{k}\left(l\right)=n_{k}\left(l\right)\right)=-\lambda_{k}\left(l\right)\Delta+n_{k}\left(l\right)\cdot\log\left(\lambda_{k}\left(l\right)\Delta\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We assume that the trial by trial evolution of the PSTH parameters follow
+ a gaussian distribution.
+ Namely, 
+\begin_inset Formula 
+\begin{equation}
+p\left(\theta_{k+1}|\theta_{k}\right)\sim\mathbb{N}\left(0,\Sigma\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+At this point the mean is zero and we still didn't take stimulus features
+ into account.
+ A non-zero mean will be added in section 7 as a result of a fitted learning
+ algorithm.
+ Stimulus features are added in section 6.
+\end_layout
+
+\begin_layout Standard
+If we assign the symbol 
+\begin_inset Formula $\theta_{0}$
+\end_inset
+
+ to the initial value of 
+\begin_inset Formula $\theta$
+\end_inset
+
+ we can get the log-likelihood function of the observed spikes (
+\begin_inset Formula $\left\{ N_{k}\right\} _{k=1}^{K}$
+\end_inset
+
+) and the hidden process 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+(
+\begin_inset Formula $\left\{ \theta_{k}\right\} _{k=1}^{K}$
+\end_inset
+
+)
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\noun default
+\color inherit
+ as a sum over all time bins in all trials:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+L=\log p\left(\left\{ N_{k}\right\} _{k=1}^{K},\left\{ \theta_{k}\right\} _{k=1}^{K}|\psi\right)=\log\sum_{k=1}^{K}p\left(\mathbf{n_{k}}|\theta_{k},H_{k}\right)\cdot p\left(\theta_{k}|\theta_{k-1}\right)=
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+=\sum_{k=1}^{K}\sum_{l=1}^{T}\left[-\lambda_{k}\left(l\right)\Delta+n_{k}\left(l\right)\cdot\log\left(\lambda_{k}\left(l\right)\Delta\right)\right]+K\cdot\log\left(\left(2\pi\right)^{-\frac{R}{2}}\cdot\left|\Sigma\right|^{-\frac{1}{2}}\right)-\frac{1}{2}\left(\theta_{k}-\theta_{k-1}\right)^{T}\Sigma^{-1}\left(\theta_{k}-\theta_{k-1}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Our log-likelihood function is 
+\begin_inset Formula $F\left(\psi\right)=\log\int d^{K}\theta e^{L}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+The parameters of the likelihood function are 
+\begin_inset Formula $\psi=\left(\gamma,\theta_{0},\Sigma\right)$
+\end_inset
+
+ and maximizing the likelihood can be done in the gradient ascent / simulated
+ annealing methods.
+\end_layout
+
+\begin_layout Standard
+In our optimizations we will assume 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ to be diagonal (block diagonal after introducing the features) and next
+ we introduce the EM algorithm for likelihood maximization.
+\end_layout
+
+\begin_layout Subsection
+The EM algorithm (introduction)
+\end_layout
+
+\begin_layout Subsubsection
+Formulation
+\end_layout
+
+\begin_layout Standard
+We're looking for the set of parameters, 
+\begin_inset Formula $\psi^{*}$
+\end_inset
+
+ that maximizes 
+\begin_inset Formula $F\left(\psi\right)=\log\int p\left(\left\{ N_{k}\right\} _{k=1}^{K},\left\{ \theta_{k}\right\} _{k=1}^{K}|\psi\right)d^{K}\theta$
+\end_inset
+
+.
+ Assume the existance of an auxillary function 
+\begin_inset Formula $Q\left(\psi,\psi'\right)$
+\end_inset
+
+ that satisfies the following:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $Q\left(\psi,\psi'\right)\le F\left(\psi\right)\forall\psi'$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $F\left(\psi\right)=Q\left(\psi,\psi\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This means that we can define an iterative process that maximizes the log-likeli
+hood (locally).
+ At step 'i' we define 
+\begin_inset Formula $\psi^{\left(i+1\right)}=\arg\max_{\psi}Q\left(\psi,\psi^{\left(i\right)}\right)$
+\end_inset
+
+.
+ This choice means that
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+F\left(\psi^{\left(i+1\right)}\right)=Q\left(\psi^{\left(i+1\right)},\psi^{\left(i+1\right)}\right)\ge Q\left(\psi^{\left(i+1\right)},\psi^{\left(i\right)}\right)\ge Q\left(\psi^{\left(i\right)},\psi^{\left(i\right)}\right)=F\left(\psi^{\left(i\right)}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This form suggest a two stage iterative algorithm.
+ It is named EM-algorithm (the 'expectation' nature of the first step will
+ become clear later in this section) and at step 'i' it goes as:
+\end_layout
+
+\begin_layout Itemize
+E-Step: Calculate 
+\begin_inset Formula $Q\left(\psi,\psi^{\left(i\right)}\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+M-Step: find 
+\begin_inset Formula $\psi^{\left(i+1\right)}$
+\end_inset
+
+ by maximizing 
+\begin_inset Formula $\psi^{\left(i+1\right)}=\arg\max_{\psi}Q\left(\psi,\psi^{\left(i\right)}\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Using the notation of 
+\begin_inset Formula $N,\theta$
+\end_inset
+
+ to describe the observable and latent variables we find 
+\begin_inset Formula $Q$
+\end_inset
+
+ in the following way:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+F\left(\psi\right)\overset{1}{=}F\left(\psi'\right)+\log\frac{p\left(N|\psi\right)}{p\left(N|\psi'\right)}\overset{2}{=}F\left(\psi'\right)+\log\int p\left(\theta|N,\psi'\right)\frac{p\left(\theta|N,\psi\right)}{p\left(\theta|N,\psi'\right)}\cdot\frac{p\left(N|\psi\right)}{p\left(N|\psi'\right)}d^{K}\theta
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\overset{3}{=}F\left(\psi'\right)+\log\int p\left(\theta|N,\psi'\right)\frac{p\left(N,\theta|\psi\right)}{p\left(N,\theta|\psi'\right)}d^{K}\theta\overset{4}{\ge}F\left(\psi'\right)+\int p\left(\theta|N,\psi'\right)\log\frac{p\left(N,\theta|\psi\right)}{p\left(N,\theta|\psi'\right)}d^{K}\theta
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\equiv Q\left(\psi,\psi'\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where:
+\end_layout
+
+\begin_layout Enumerate
+From the definition of 
+\begin_inset Formula $F\left(\psi\right)=\log p\left(\left\{ N_{k}\right\} _{k=1}^{K}|\psi\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Because 
+\begin_inset Formula $\int p\left(\theta|N,\psi'\right)\frac{p\left(\theta|N,\psi\right)}{p\left(\theta|N,\psi'\right)}d^{K}\theta=1$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+From Bayes' law 
+\begin_inset Formula $p\left(\theta|N,\psi\right)\cdot p\left(N|\psi\right)=p\left(N,\theta|\psi\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+From Jensen's inequality: 
+\begin_inset Formula $\log\int\ge\int\log$
+\end_inset
+
+ in concave functions
+\end_layout
+
+\begin_layout Standard
+Note that 
+\begin_inset Formula $Q\left(\psi,\psi'\right)=F\left(\psi'\right)-\frac{1}{p\left(N|\psi'\right)}D_{KL}\left[p\left(N,\theta|\psi'\right)||p\left(N,\theta|\psi\right)\right]$
+\end_inset
+
+ which means that the requirements above are met.
+ In applying the E-step it is enough to reduce the auxillary function to
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+Q\left(\psi,\psi'\right)=\int p\left(\theta|N,\psi'\right)\log p\left(N,\theta|\psi\right)d^{K}\theta=E_{p\left(\theta|N,\psi'\right)}L
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Because the M-step requires optimization over 
+\begin_inset Formula $\psi$
+\end_inset
+
+ and not 
+\begin_inset Formula $\psi'$
+\end_inset
+
+.
+ Now this is in the form of an expected value ...Hence the 'E-Step'.
+\end_layout
+
+\begin_layout Subsubsection
+Remarks
+\end_layout
+
+\begin_layout Standard
+Note two important points:
+\end_layout
+
+\begin_layout Enumerate
+We never actually compute the log-likelihood 
+\begin_inset Formula $F\left(\psi\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+We get the divergence 'for free' because: 
+\begin_inset Formula $\nabla_{\psi}\log p\left(N|\psi\right)|_{\psi=\psi'}=\nabla_{\psi}\log\int p\left(N,\theta|\psi\right)d^{K}\theta|_{\psi=\psi'}=\frac{1}{p\left(N|\psi'\right)}\cdot\nabla_{\psi}\int p\left(N,\theta|\psi\right)d^{K}\theta|_{\psi=\psi'}=\int\frac{p\left(N,\theta|\psi'\right)}{p\left(N|\psi'\right)}\cdot\nabla_{\psi}\log p\left(N,\theta|\psi\right)d^{K}\theta|_{\psi=\psi'}=\nabla_{\psi}Q\left(\psi,\psi'\right)|_{\psi=\psi'}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+E-Step - i'th iteration
+\end_layout
+
+\begin_layout Standard
+Here we need to compute the expectation of 
+\begin_inset Formula $L$
+\end_inset
+
+ (eqn #) over the distribution 
+\begin_inset Formula $p\left(\theta|N,\psi'\right)$
+\end_inset
+
+.
+ This calculation boils down to computing the following constituents:
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $\theta_{k|K}\equiv\int p\left(\theta|N,\psi'\right)\cdot\theta_{k}d^{K}\theta$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $W_{k,k+1|K}\equiv\int p\left(\theta|N,\psi'\right)\cdot\left(\theta_{k}-\theta_{k|K}\right)\cdot\left(\theta_{k+1}-\theta_{k+1|K}\right)d^{K}\theta$
+\end_inset
+
+ which is the covariance of 
+\begin_inset Formula $\theta_{k},\theta_{k+1}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+\begin_inset Formula $\int p\left(\theta|N,\psi'\right)\cdot\theta_{k}^{2}d^{K}\theta$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+\begin_inset Formula $\int p\left(\theta|N,\psi'\right)\cdot\exp\left(\theta_{k}\right)d^{K}\theta$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The whole point here is going to be that we assume the distribution of 
+\begin_inset Formula $\theta_{0}$
+\end_inset
+
+ to be Gaussian (or a 
+\begin_inset Formula $\delta$
+\end_inset
+
+ function) and that all posterior distributions (
+\begin_inset Formula $p\left(\theta_{k}|...\right)$
+\end_inset
+
+) are also Gaussian.
+ This will allow developing a filtering algorithm.
+\end_layout
+
+\begin_layout Standard
+This is done by several algorithms:
+\end_layout
+
+\begin_layout Subsubsection
+Forward filter algorithm (Kalman++ Eden et al 2004)
+\end_layout
+
+\begin_layout Standard
+Define the following mean values and covariance matrices:
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $\theta_{k|k-1}=E\left[\theta_{k}|N_{1:k-1},\psi^{(i)}\right]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $\theta_{k|k}=E\left[\theta_{k}|N_{1:k},\psi^{(i)}\right]$
+\end_inset
+
+ includes the spiking activity in the k'th trial
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $W_{k|k-1}=Var\left[\theta_{k}|N_{1:k-1},\psi^{(i)}\right]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+\begin_inset Formula $W_{k|k}=Var\left[\theta_{k}|N_{1:k},\psi^{(i)}\right]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This algorithm starts from the initial values 
+\begin_inset Formula $\theta_{1|0}=\theta_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $W_{0|0}=0$
+\end_inset
+
+ and iterates forward the following steps:
+\end_layout
+
+\begin_layout Subparagraph
+One step prediction:
+\end_layout
+
+\begin_layout Standard
+From the identity 
+\begin_inset Formula $p\left(\theta_{k}|N_{1:k-1},\psi^{(i)}\right)=\int p\left(\theta_{k}|\theta_{k-1},\psi^{(i)}\right)p\left(\theta_{k-1}|N_{1:k-1},\psi^{(i)}\right)d\theta_{k-1}$
+\end_inset
+
+ we assume all densities to be Gaussian; 
+\begin_inset Formula $p\left(\theta_{k}|N_{1:k-1},\psi^{(i)}\right)\sim N\left(\theta_{k|k-1},W_{k|k-1}\right)$
+\end_inset
+
+, 
+\begin_inset Formula $p\left(\theta_{k-1}|N_{1:k-1},\psi^{(i)}\right)\sim N\left(\theta_{k-1|k-1},W_{k-1|k-1}\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $p\left(\theta_{k}|\theta_{k-1},\psi^{(i)}\right)\sim N\left(\theta_{k-1},\Sigma\right)$
+\end_inset
+
+.
+ The convolution of two gaussians is also a gaussian (Appendix) so we immediatel
+y get the relation:
+\begin_inset Formula 
+\begin{equation}
+\theta_{k|k-1}=\theta_{k-1|k-1},W_{k|k-1}=W_{k-1|k-1}+\Sigma
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Next, we incorporate the observed spikes in the k'th trial.
+\end_layout
+
+\begin_layout Subparagraph
+The posterior distribution:
+\end_layout
+
+\begin_layout Standard
+We use Bayes law to incorporate the observed spikes in the k'th trial: 
+\begin_inset Formula $p\left(\theta_{k}|N_{1:k},\psi^{(i)}\right)\overset{1}{=}\frac{p\left(N_{1:k}|\theta_{k},\psi^{(i)}\right)\cdot p\left(\theta_{k}|\psi^{(i)}\right)}{p\left(N_{1:k}\right)}\overset{2}{=}\frac{p\left(N_{k}|\theta_{k},\psi^{(i)}\right)\cdot p\left(N_{1:k-1}|\theta_{k},\psi^{(i)}\right)\cdot p\left(\theta_{k}|\psi^{(i)}\right)}{p\left(N_{k}|N_{1:k-1}\right)\cdot p\left(N_{1:k-1}\right)}$
+\end_inset
+
+
+\begin_inset Formula $\overset{3}{=}\frac{p\left(N_{k}|\theta_{k},\psi^{(i)}\right)\cdot p\left(N_{1:k-1}\right)\cdot p\left(\theta_{k}|N_{1:k-1},\psi^{(i)}\right)}{p\left(N_{k}|N_{1:k-1}\right)\cdot p\left(N_{1:k-1}\right)}$
+\end_inset
+
+
+\begin_inset Formula $\overset{4}{=}\frac{p\left(N_{k}|\theta_{k},\psi^{(i)}\right)\cdot p\left(\theta_{k}|N_{1:k-1},\psi^{(i)}\right)}{p\left(N_{k}|N_{1:k-l},\psi^{(i)}\right)}\sim N\left(\theta_{k|k},W_{k|k}\right)$
+\end_inset
+
+.
+ Where (1) and (3) follow Bayes' rule, (2) stems from 
+\begin_inset Formula $N_{k}$
+\end_inset
+
+ and 
+\begin_inset Formula $N_{1:k-1}$
+\end_inset
+
+ being independent given 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+ and (4) is simple algebra.
+\end_layout
+
+\begin_layout Standard
+We are going to take the log of both sides and differentiate with respect
+ to 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+ so we can ignore the denominator.
+\end_layout
+
+\begin_layout Standard
+We use 
+\begin_inset Formula $p\left(N_{k}|\theta_{k},\psi^{(i)}\right)=\prod_{l}\exp\left[-\lambda_{k}\left(l\right)\Delta+n_{k}\left(l\right)\cdot\log\left(\lambda_{k}\left(l\right)\Delta\right)\right]$
+\end_inset
+
+ and 
+\begin_inset Formula $p\left(\theta_{k}|N_{1:k-1},\psi^{(i)}\right)\sim N\left(\theta_{k|k-1},W_{k|k-1}\right)$
+\end_inset
+
+ to get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+-\frac{1}{2}\left(\theta_{k}-\theta_{k|k}\right)^{T}W_{k|k}^{-1}\left(\theta_{k}-\theta_{k|k}\right)=\sum_{l=1}^{T}\left[-\lambda_{k}\left(l\right)\Delta+n_{k}\left(l\right)\cdot\log\left(\lambda_{k}\left(l\right)\Delta\right)\right]-\frac{1}{2}\left(\theta_{k}-\theta_{k|k-1}\right)^{T}W_{k|k-1}^{-1}\left(\theta_{k}-\theta_{k|k-1}\right)+constants
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We now derivate with respect to 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+ twice.
+ First to get the linear term (the mean) and second to get the variance.
+ (remember that 
+\begin_inset Formula $W$
+\end_inset
+
+ and 
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula $W^{-1}$
+\end_inset
+
+ are symmetric)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\partial}{\partial\theta_{k,r}}\rightarrow\left[W_{k|k}^{-1}\cdot\left(\theta_{k}-\theta_{k|k}\right)\right]_{r}=\left[W_{k|k-1}^{-1}\cdot\left(\theta_{k}-\theta_{k|k-1}\right)\right]_{r}-\sum_{l=1}^{T}\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta_{k,r}}\cdot\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+=\left[W_{k|k-1}^{-1}\cdot\left(\theta_{k}-\theta_{k|k-1}\right)\right]_{r}-\sum_{l=\left(r-1\right)\frac{T}{R}}^{r\frac{T}{R}}\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This should hold for 
+\begin_inset Formula $\theta_{k}=\theta_{k|k-1}$
+\end_inset
+
+ so we insert it and get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+-W_{k|k}^{-1}\cdot\left(\theta_{k|k-1}-\theta_{k|k}\right)=\sum_{l=1}^{T}\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta}\cdot\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]|_{\theta=\theta_{k|k-1}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which we solve and get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\theta_{k|k}=\theta_{k|k-1}+W_{k|k}\cdot\sum_{l=1}^{T}\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta_{k}}\cdot\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]=\theta_{k|k-1}+W_{k|k}\cdot\left(\begin{array}{c}
+\sum_{l=1}^{\frac{T}{R}}\left(n_{k}\left(l\right)-\lambda_{k}\left(l\right)\cdot\Delta\right)\\
+.\\
+.\\
+\sum_{l=T\cdot\frac{R-1}{R}+1}^{T}\left(n_{k}\left(l\right)-\lambda_{k}\left(l\right)\cdot\Delta\right)
+\end{array}\right)|_{\theta=\theta_{k|k-1}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We now differentiate again:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\partial}{\partial\theta_{k}}\left\{ W_{k|k}^{-1}\cdot\left(\theta_{k}-\theta_{k|k}\right)=W_{k|k-1}^{-1}\cdot\left(\theta_{k}-\theta_{k|k-1}\right)-\sum_{l=1}^{T}\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta_{k}}\cdot\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]\right\} 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+W_{k|k}^{-1}=W_{k|k-1}^{-1}-\sum_{l=1}^{T}\left\{ \frac{\partial^{2}\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta^{2}}\cdot\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]-\Delta\lambda_{k}\left(l\right)\cdot\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta}\cdot\left(\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta}\right)^{T}\right\} |_{\theta=\theta_{k|k-1}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\left[W_{k|k}^{-1}\right]_{ab}=\left[W_{k|k-1}^{-1}\right]_{ab}+\Delta\cdot\delta_{ab}\sum_{l=\left(a-1\right)\frac{T}{R}+1}^{a\frac{T}{R}}\lambda_{k}\left(l\right)\cdot|_{\theta=\theta_{k|k-1}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This is the first order (in 
+\begin_inset Formula $\Delta$
+\end_inset
+
+) correction to the Kalman filter for non-Gaussian observation.
+\end_layout
+
+\begin_layout Standard
+So, we starts sequentially (in 'k'), from equation # followed by equations
+ #,# and calculate 
+\begin_inset Formula $\theta_{k|k},W_{k|k}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subparagraph
+Note:
+\end_layout
+
+\begin_layout Standard
+There is a point here that is not clear.
+ In deriving the last equation (#) we insert 
+\begin_inset Formula $\theta=\theta_{k|k-1}$
+\end_inset
+
+ but this is arbitrary.
+ The correction to 
+\begin_inset Formula $W_{k|k}$
+\end_inset
+
+ is 
+\begin_inset Formula $\theta$
+\end_inset
+
+ dependent which seems wrong to me.
+\end_layout
+
+\begin_layout Standard
+(It will also be the same result if we develop 
+\begin_inset Formula $\lambda_{k}$
+\end_inset
+
+ around 
+\begin_inset Formula $\theta_{k|k-1}$
+\end_inset
+
+ ...
+ so it's fine)
+\end_layout
+
+\begin_layout Subsubsection
+Smoothing algorithm (Kalman smoother)
+\end_layout
+
+\begin_layout Standard
+This is a reverse sequence a.k.a.
+ the Kalman smoother (Jazwinski, page 217, equation 7.86, see also in Shumway
+ and Stoffer 1982)
+\end_layout
+
+\begin_layout Standard
+This is developed here for 
+\begin_inset Formula $\theta_{k+1}-\theta_{k}\sim N\left(0,\Sigma\right)$
+\end_inset
+
+ and assumes that we have 
+\begin_inset Formula $\theta_{k|k},W_{k|k}\forall k$
+\end_inset
+
+ (from previous stages).
+ This algorithm will have to be revisited when introducing learning algorithms
+ in section 7.
+\end_layout
+
+\begin_layout Standard
+We start by assuming that 
+\begin_inset Formula $\theta_{k|l},\theta_{k+1|l}$
+\end_inset
+
+ (
+\begin_inset Formula $l>k$
+\end_inset
+
+) both maximize the Gaussian joint distribution 
+\begin_inset Formula $p\left(\theta_{k},\theta_{k+1}|N_{1:l},\psi^{(i)}\right)$
+\end_inset
+
+.
+ Now,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+p\left(\theta_{k},\theta_{k+1}|N_{1:l},\psi^{(i)}\right)=\frac{p\left(\theta_{k},\theta_{k+1},N_{1:l}|\psi^{(i)}\right)}{p\left(N_{1:l}\right)}=\frac{p\left(N_{1:k}\right)}{p\left(N_{1:l}\right)}\cdot p\left(\theta_{k},\theta_{k+1},N_{\mathbf{k+1}:l}|N_{1:k},\psi^{(i)}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+=\frac{p\left(N_{1:k}\right)}{p\left(N_{1:l}\right)}\cdot p\left(N_{k+1:l}|\theta_{k},\theta_{k+1},N_{1:k},\psi^{(i)}\right)\cdot p\left(\theta_{k},\theta_{k+1}|N_{1:k},\psi^{(i)}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Since the process is assumed Markov (including the observations) we use:
+ 
+\begin_inset Formula $p\left(N_{k+1:l}|\theta_{k},\theta_{k+1},N_{1:k},\psi^{(i)}\right)=p\left(N_{k+1:l}|\theta_{k+1},\psi^{(i)}\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $p\left(\theta_{k},\theta_{k+1}|N_{1:k},\psi^{(i)}\right)=p\left(\theta_{k+1}|\theta_{k},N_{1:k},\psi^{(i)}\right)\cdot p\left(\theta_{k}|N_{1:k},\psi^{(i)}\right)=p\left(\theta_{k+1}|\theta_{k},\psi^{(i)}\right)\cdot p\left(\theta_{k}|N_{1:k},\psi^{(i)}\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Combining the terms above with equation # we get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p\left(\theta_{k},\theta_{k+1}|N_{1:l},\psi^{(i)}\right)=c\left(\theta_{k+1}\right)\cdot p\left(\theta_{k+1}|\theta_{k},\psi^{(i)}\right)\cdot p\left(\theta_{k}|N_{1:k},\psi^{(i)}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $c\left(\theta_{k+1}\right)$
+\end_inset
+
+ is independent of 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+.
+ We now insert 
+\begin_inset Formula $p\left(\theta_{k+1}|\theta_{k},\psi^{(i)}\right)\sim N\left(\theta_{k},\Sigma\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $p\left(\theta_{k}|N_{1:k},\psi^{(i)}\right)\sim N\left(\theta_{k|k},W_{k|k}\right)$
+\end_inset
+
+ and require that 
+\begin_inset Formula $\theta_{k|l},\theta_{k+1|l}$
+\end_inset
+
+ minimize:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+d\left(\theta_{k+1}\right)+\left(\theta_{k+1}-\theta_{k}\right)^{T}\cdot\Sigma^{-1}\cdot\left(\theta_{k+1}-\theta_{k}\right)+\left(\theta_{k}-\theta_{k|k}\right)^{T}\cdot W_{k|k}^{-1}\cdot\left(\theta_{k}-\theta_{k|k}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $d\left(\theta_{k+1}\right)$
+\end_inset
+
+ is independent of 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+.
+ If we assume that 
+\begin_inset Formula $\theta_{k+1|l}$
+\end_inset
+
+ is known we only need to minimize
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\left(\theta_{k+1|l}-\theta_{k}\right)^{T}\cdot\Sigma^{-1}\cdot\left(\theta_{k+1|l}-\theta_{k}\right)+\left(\theta_{k}-\theta_{k|k}\right)^{T}\cdot W_{k|k}^{-1}\cdot\left(\theta_{k}-\theta_{k|k}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With repect to 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+.
+ We take the derivative and set it to zero (remember that the matrices are
+ symmetric):
+\begin_inset Formula 
+\[
+0=\left(\Sigma^{-1}+W_{k|k}^{-1}\right)\cdot\theta_{k|l}-\Sigma^{-1}\cdot\theta_{k+1|l}-W_{k|k}^{-1}\cdot\theta_{k|k}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which solves to 
+\begin_inset Formula 
+\begin{equation}
+\theta_{k|l}=\left(\Sigma^{-1}+W_{k|k}^{-1}\right)^{-1}\cdot\left(\Sigma^{-1}\cdot\theta_{k+1|l}+W_{k|k}^{-1}\cdot\theta_{k|k}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Using the identities in appendix 8.3 this resolves into:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\theta_{k|l}=\theta_{k|k}+A_{k}\cdot\left(\theta_{k+1|l}-\theta_{k+1|k}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+A_{k}=W_{k|k}W_{k+1|k}^{-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Proof: 
+\end_layout
+
+\begin_layout Standard
+Set the matrices in appendix 8.3 to be 
+\begin_inset Formula $M=I,R=\Sigma,P=W_{k|k}$
+\end_inset
+
+ and get 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\theta_{k|l}=\left(\Sigma^{-1}+W_{k|k}^{-1}\right)^{-1}\Sigma^{-1}\cdot\theta_{k+1|l}+\left(\Sigma^{-1}+W_{k|k}^{-1}\right)^{-1}W_{k|k}^{-1}\cdot\theta_{k|k}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+=W_{k|k}\cdot\left(W_{k|k}+\Sigma\right)^{-1}\theta_{k+1|l}+\left(I-W_{k|k}\cdot\left(W_{k|k}+\Sigma\right)^{-1}\right)\theta_{k|k}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and all that is left is to identify 
+\begin_inset Formula $\theta_{k|k}=\theta_{k+1|k}$
+\end_inset
+
+ and 
+\begin_inset Formula $W_{k|k}+\Sigma=W_{k+1|k}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Next we develop the smoothing of the covariance matrix.
+ We define 
+\begin_inset Formula $\theta_{k|q}^{\sim}=\theta_{k}-\theta_{k|q}$
+\end_inset
+
+ and subtract equation # from 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+ to get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\theta_{k|l}^{\sim}+A_{k}\theta_{k+1|l}=\theta_{k|k}^{\sim}+A_{k}\theta_{k|k}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We square both sides (multiply by transpose) and compute the expextation
+ to get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+W_{k|l}+\underset{=0}{A_{k}\left\langle \theta_{k+1|l}\theta_{k|l}^{\sim T}\right\rangle }+\underset{=0}{\left\langle \theta_{k|l}^{\sim}\theta_{k+1|l}^{T}\right\rangle A_{k}^{T}}+A_{k}\left\langle \theta_{k+1|l}\theta_{k+1|l}^{T}\right\rangle A_{k}^{T}=W_{k|k}+\underset{=0}{A_{k}\left\langle \theta_{k|k}\theta_{k|k}^{\sim T}\right\rangle }+\underset{=0}{\left\langle \theta_{k|k}^{\sim}\theta_{k|k}^{T}\right\rangle A_{k}^{T}}+A_{k}\left\langle \theta_{k|k}\theta_{k|k}^{T}\right\rangle A_{k}^{T}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and so, by the identity 
+\begin_inset Formula $\left\langle \theta_{k}\theta_{k}^{T}\right\rangle =W_{k|q}+\left\langle \theta_{k|q}\theta_{k|q}^{T}\right\rangle $
+\end_inset
+
+ we get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+W_{k|l}=W_{k|k}+A_{k}\cdot\left(W_{k+1|l}-W_{k+1|k}\right)\cdot A_{k}^{T}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Backwards (reverse) calculation:
+\end_layout
+
+\begin_layout Standard
+We start with 
+\begin_inset Formula $\theta_{K|K}$
+\end_inset
+
+ and 
+\begin_inset Formula $W_{K|K}$
+\end_inset
+
+ that resulted from the forward filter (section 4.1) and iterate equations
+ #,# from K...1 to obtain 
+\begin_inset Formula $\theta_{k|K}$
+\end_inset
+
+ and 
+\begin_inset Formula $W_{k|K}$
+\end_inset
+
+ 
+\begin_inset Formula $\forall k$
+\end_inset
+
+.
+ From these quantities we easily get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+E\left(\theta_{k}^{2}|N,\psi^{(i)}\right)=\int p\left(\theta|N,\psi^{(i)}\right)\cdot\theta_{k}^{2}d^{K}\theta=W_{k|K}+\theta_{k|K}^{T}\theta_{k|K}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+state space covariance algorithm (de Jong and Mackinnon 1988)
+\end_layout
+
+\begin_layout Standard
+Here we compute 
+\begin_inset Formula $W_{k,u|K}\equiv\int p\left(\theta|N,\psi'\right)\cdot\left(\theta_{k}-\theta_{k|K}\right)\cdot\left(\theta_{u}-\theta_{u|K}\right)d^{K}\theta$
+\end_inset
+
+ .
+ We assume that 
+\begin_inset Formula $1\le k\le u\le K$
+\end_inset
+
+ and use 
+\begin_inset Formula $\theta_{k|l}=\theta_{k|k}+A_{k}\cdot\left(\theta_{k+1|l}-\theta_{k+1|k}\right)$
+\end_inset
+
+ (equation # above).
+ 
+\end_layout
+
+\begin_layout Subparagraph
+Lemma: 
+\end_layout
+
+\begin_layout Standard
+The orthogonal projection of 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+ on the subspace 
+\begin_inset Formula $N_{1},...,N_{k},\theta_{k+1}-\theta_{k+1|k},\epsilon_{s+1}...\epsilon_{K}$
+\end_inset
+
+ (with 
+\begin_inset Formula $\epsilon_{k+1}=\theta_{k+2}-\theta_{k+1}$
+\end_inset
+
+ being the realization of the random additions in the brownian motion) is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\hat{\theta_{k}}=\theta_{k|k}+A_{k}\cdot\left(\theta_{k+1}-\theta_{k+1|k}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Proof:
+\end_layout
+
+\begin_layout Standard
+The inner product is 
+\begin_inset Formula $\left\langle X,Y\right\rangle =E\left(XY\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Both 
+\begin_inset Formula $\theta_{k+1}-\theta_{k+1|k}$
+\end_inset
+
+ and 
+\begin_inset Formula $\epsilon_{s+1}...\epsilon_{K}$
+\end_inset
+
+ have mean zero and are uncorrelated to each other and to 
+\begin_inset Formula $N_{1},...,N_{k}$
+\end_inset
+
+.
+ So the projection breaks (see appendix) to 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\hat{\theta_{k}}=\theta_{k|k}+Cov\left(\theta_{k},\theta_{k+1}-\theta_{k+1|k}\right)\cdot W_{k+1|k}^{-1}\cdot\left(\theta_{k+1}-\theta_{k+1|k}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+Cov\left(\theta_{k},\theta_{k+1}-\theta_{k+1|k}\right)\cdot W_{k+1|k}^{-1}=Cov\left(\theta_{k},\theta_{k}\right)\cdot W_{k+1|k}^{-1}=A_{k}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Hence, 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+W_{k,u|K}\equiv Cov\left[\theta_{k}-\theta_{k|K},\theta_{u}-\theta_{u|K}\right]=Cov\left[\theta_{k}-\theta_{k|K},\theta_{u}\right]=Cov\left[\theta_{k}-\hat{\theta_{k}}+\hat{\theta_{k}}-\theta_{k|K},\theta_{u}\right]\overset{1}{=}Cov\left[\hat{\theta_{k}}-\theta_{k|K},\theta_{u}\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+=Cov\left[A_{k}\cdot\left(\theta_{k+1}-\theta_{k+1|K}\right),\theta_{u}\right]=A_{k}W_{k+1,u|K}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where the equality '1' stems from the orthogonality of the error in different
+ steps.
+ Namely, 
+\begin_inset Formula $\theta_{k}-\hat{\theta_{k}}$
+\end_inset
+
+ is a projection of 
+\begin_inset Formula $\theta_{k}$
+\end_inset
+
+ on a space that is uncorrelated to 
+\begin_inset Formula $\theta_{u}$
+\end_inset
+
+.
+ (See appendix)
+\end_layout
+
+\begin_layout Subsubsection
+Calculating 
+\begin_inset Formula $\left\langle \exp\left(\theta\right)\right\rangle $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The last quantity we need to calculate in the E-step is 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $\int p\left(\theta|N,\psi'\right)\cdot\exp\left(\theta_{k,r}\right)d^{K}\theta$
+\end_inset
+
+.
+ Here we expand 
+\begin_inset Formula $\exp\theta_{k,r}$
+\end_inset
+
+ around 
+\begin_inset Formula $\theta_{k|K}$
+\end_inset
+
+ in a taylor series to the second order and get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\exp\left(\theta_{k,r}\right)\approx\exp\left(\theta_{k|K,r}\right)+\left(\left(\theta_{k}-\theta_{k|K}\right)\cdot\nabla_{\theta}\right)\exp\left(\theta\right)|_{\theta=\left(0,0,...,\theta_{k|K,r},0,..\right)}+\frac{1}{2}\left(\theta_{k}-\theta_{k|K}\right)\left[\left(\theta_{k}-\theta_{k|K}\right)\nabla_{\theta}\left(\nabla_{\theta}\exp\theta\right)\right]|_{\theta=\left(0,0,...,\theta_{k|K,r},0,..\right)}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and than take the expectation according to 
+\begin_inset Formula $\theta_{k}\sim N\left(\theta_{k|K},W_{k|K}\right)$
+\end_inset
+
+ and get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+E\left[\exp\theta_{k,r}|N,\psi^{(i)}\right]\approx\exp\theta_{k|K,r}+\frac{1}{2}\left[W_{k|K}\right]_{rr}\exp\theta_{k|K,r}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+M-Step - i'th iteration
+\end_layout
+
+\begin_layout Standard
+The goal here is to find 
+\begin_inset Formula $\psi^{\left(i+1\right)}=\arg\max_{\psi}Q\left(\psi,\psi^{(i)}\right)$
+\end_inset
+
+.
+ Remember,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+Q\left(\psi,\psi^{\left(i\right)}\right)=E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}\sum_{l=1}^{T}\left(-\lambda_{k}\left(l\right)\Delta+n_{k}\left(l\right)\cdot\log\left(\lambda_{k}\left(l\right)\Delta\right)\right)\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+-\frac{1}{2}KR\log2\pi-\frac{1}{2}K\log\left|\Sigma\right|-\frac{1}{2}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}\left(\theta_{k}-\theta_{k-1}\right)^{T}\Sigma^{-1}\left(\theta_{k}-\theta_{k-1}\right)\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With (reminder) 
+\begin_inset Formula 
+\begin{equation}
+\lambda_{k}\left(l|\theta_{k},\gamma,H_{k}\right)=\exp\left\{ \sum_{r=1}^{R}\theta_{k,r}g_{,r}\left(l\right)\right\} \exp\left\{ \sum_{j=1}^{l}\gamma_{j}n_{k,l-j}\right\} 
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Updating 
+\begin_inset Formula $\gamma$
+\end_inset
+
+ (Newton-Raphson)
+\end_layout
+
+\begin_layout Standard
+Newton raphson iteration for finding the extermum of 
+\begin_inset Formula $f\left(x\right)$
+\end_inset
+
+ by 
+\begin_inset Formula $x_{n+1}=x_{n}-\frac{f^{'}\left(x_{n}\right)}{f^{(2)}\left(x_{n}\right)}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $Q\left(\psi,\psi^{(i)}\right)$
+\end_inset
+
+'s dependence on 
+\begin_inset Formula $\gamma$
+\end_inset
+
+ separates quite nicely.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\partial Q}{\partial\gamma_{j}}=\sum_{k,l}\left(-\lambda_{k}\left(l\right)\cdot\Delta\cdot n_{k}\left(l-j\right)+n_{k}\left(l\right)\cdot n_{k}\left(l-j\right)\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\partial^{2}Q}{\partial\gamma_{s}\partial\gamma_{j}}=-\Delta\sum_{k,l}\lambda_{k}\left(l\right)\cdot n_{k}\left(l-j\right)\cdot n_{k}\left(l-s\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+These derivatives are used to follow an iterative algorithm whos 'm' iteration
+ goes:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\gamma_{m+1}^{\left(i\right)}=\gamma_{m}^{\left(i\right)}-\left[\nabla_{\gamma}^{2}Q\right]^{-1}\cdot\nabla_{\gamma}Q|_{\gamma=\gamma_{m}^{(i)}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and the stopping criterion is 
+\begin_inset Formula $\left|\gamma_{m+1}^{\left(i\right)}-\gamma_{m}^{\left(i\right)}\right|<10^{-2}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Updating 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $Q\left(\psi,\psi^{(i)}\right)$
+\end_inset
+
+'s dependence on 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ separates completely.
+ Furthermore, there is a closed form solution to:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\Sigma^{(i+1)}=\arg\max_{\Sigma}S\left(\Sigma\right)=\arg\max_{\Sigma}\left\{ -\frac{1}{2}K\log\left|\Sigma\right|-\frac{1}{2}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}\left(\theta_{k}-\theta_{k-1}\right)^{T}\Sigma^{-1}\left(\theta_{k}-\theta_{k-1}\right)\right]\right\} 
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the original setting 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is a diagonal matrix.
+ So, in this case we can assume 
+\begin_inset Formula $\Sigma=\left(\begin{array}{cccc}
+d_{1} &  &  & 0\\
+ & .\\
+ &  & .\\
+0 &  &  & d_{R}
+\end{array}\right)$
+\end_inset
+
+ and solve 
+\begin_inset Formula $\frac{\partial S}{\partial d_{j}}=0$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+0=\frac{K}{d_{j}}-E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}\left(\theta_{k}-\theta_{k-1}\right)^{T}\left(\begin{array}{cccc}
+0 &  &  & 0\\
+ & .\\
+ &  & -\frac{1}{d_{j}^{2}}\\
+0 &  &  & 0
+\end{array}\right)\left(\theta_{k}-\theta_{k-1}\right)\right]=\frac{K}{d_{j}}-\frac{1}{d_{j}^{2}}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}\left(\theta_{k}-\theta_{k-1}\right)_{j}^{T}\left(\theta_{k}-\theta_{k-1}\right)_{j}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which is solved to:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+d_{j}=\frac{1}{K}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}\left(\theta_{k}-\theta_{k-1}\right)_{j}^{T}\left(\theta_{k}-\theta_{k-1}\right)_{j}\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the general case we use the fact that 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is symmetric and invertible so there exists a diagonal matrix 
+\begin_inset Formula $D=\left(\begin{array}{cccc}
+d_{1} &  &  & 0\\
+ & .\\
+ &  & .\\
+0 &  &  & d_{R}
+\end{array}\right)$
+\end_inset
+
+ and an orthogonal matrix 
+\begin_inset Formula $O$
+\end_inset
+
+ such that 
+\begin_inset Formula $\Sigma=ODO^{-1}$
+\end_inset
+
+.
+ Introducing this into equation # we get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $S\left(\Sigma\right)=-\frac{1}{2}K\log\left|\Sigma\right|-\frac{1}{2}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}\left(\theta_{k}-\theta_{k-1}\right)^{T}\Sigma^{-1}\left(\theta_{k}-\theta_{k-1}\right)\right]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $=-\frac{1}{2}K\log\left|D\right|-\frac{1}{2}\int d^{R}\theta p\left(\theta|N,\psi^{\left(i\right)}\right)\left[\sum_{k=1}^{K}\left(\theta_{k}-\theta_{k-1}\right)^{T}O^{T}D^{-1}O\left(\theta_{k}-\theta_{k-1}\right)\right]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We make the change 
+\begin_inset Formula $y_{k}=O\theta_{k}$
+\end_inset
+
+ which has a Jacobian with determinant 1 and get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+S\left(D\right)=-\frac{1}{2}K\log\left|D\right|-\frac{1}{2}E_{p\left(O^{T}y|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}\left(y_{k}-y_{k-1}\right)^{T}D^{-1}\left(y_{k}-y_{k-1}\right)\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which solves as above.
+ All we need to do now is transform back to 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ via:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\Sigma^{(i+1)}=\frac{1}{K}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\sum_{k=1}^{K}O\left(\begin{array}{cccc}
+\left(O^{T}\theta_{k}^{T}-O^{T}\theta_{k-1}^{T}\right)_{1}\left(O\theta_{k}-O\theta_{k-1}\right)_{1} &  &  & 0\\
+ & .\\
+ &  & .\\
+0 &  &  & d_{R}
+\end{array}\right)O^{-1}\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+=\frac{1}{K}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\sum_{k}\left(\theta_{k}-\theta_{k-1}\right)^{T}\left(\theta_{k}-\theta_{k-1}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Updating 
+\begin_inset Formula $\theta_{0}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This too has a closed form solution.
+ The part of 
+\begin_inset Formula $Q\left(\psi,\psi^{(i)}\right)$
+\end_inset
+
+ pertaining 
+\begin_inset Formula $\theta_{0}$
+\end_inset
+
+ is 
+\begin_inset Formula $-\frac{1}{2}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\left(\theta_{1}-\theta_{0}\right)^{T}\Sigma^{-1}\left(\theta_{1}-\theta_{0}\right)\right]=-\sum_{ab}\frac{1}{2}E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\left(\theta_{1}-\theta_{0}\right)_{a}\Sigma_{ab}^{-1}\left(\theta_{1}-\theta_{0}\right)_{b}\right]$
+\end_inset
+
+.
+ We derivate by 
+\begin_inset Formula $\theta_{0q}$
+\end_inset
+
+ and equate to zero (taking into consideration that 
+\begin_inset Formula $\Sigma^{-1}$
+\end_inset
+
+ is symmetric:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+-E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\Sigma^{-1}\left(\theta_{0}-\theta_{1}\right)\right]_{q}=0
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+But, since 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is invertible we obtain:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\theta_{0}^{(i+1)}=E_{p\left(\theta|N,\psi^{\left(i\right)}\right)}\left[\theta_{1}\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This concludes the M-step (and the original SSGLM).
+ Next we include the stimulus features.
+\end_layout
+
+\begin_layout Subsection
+Introducing stimulus features
+\begin_inset Formula $ $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here we add another dimension to the CIF, the stimulus features.
+ Thus, the change is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\lambda_{k}\left(l|\theta_{k},\gamma,H_{k}\right)=\exp\left\{ \sum_{r=1}^{R}\sum_{\alpha=0}^{F}\theta_{k,\alpha,r}g_{,r}\left(l\right)f\left(x_{k}\right)_{\alpha}\right\} \exp\left\{ \sum_{j=1}^{l}\gamma_{j}n_{k,l-j}\right\} 
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where, 
+\begin_inset Formula $x_{k}$
+\end_inset
+
+ is the stimulus at thr k'th trial, 
+\begin_inset Formula $f\left(x_{\alpha}\right)\in\left\{ -1,1\right\} ^{F+1}$
+\end_inset
+
+ is it's features and 
+\begin_inset Formula $f_{0}$
+\end_inset
+
+ is always '1' to account for the feature independent cases.
+ This change is equivalent to a dynamic PSTH for each feature.
+\end_layout
+
+\begin_layout Standard
+Next we will see the changes in the algorithms this change introduces.
+\end_layout
+
+\begin_layout Subsubsection
+log-likelihood function
+\end_layout
+
+\begin_layout Standard
+Here there's no change.
+ We continue to assume 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p\left(\theta_{k+1}|\theta_{k}\right)\sim\mathbb{N}\left(0,\Sigma\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+But now 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is symmetric and block diagonal because we construct 
+\begin_inset Formula $\theta_{k}=\left(\theta_{k,r=1,\alpha=0},\theta_{k,r=1,\alpha=1},...,\theta_{k,r=1,\alpha=F},\theta_{k,r=2,\alpha=0},...\right)$
+\end_inset
+
+.
+ For ease of use we identify 
+\begin_inset Formula $\theta_{k,r,\alpha}=\theta_{k}\left(\left(r-1\right)F+\alpha+1\right)$
+\end_inset
+
+The log-likelihood of observed spikes and hidden process (
+\begin_inset Formula $L$
+\end_inset
+
+) doesn't change.
+\end_layout
+
+\begin_layout Subsubsection
+E-step
+\end_layout
+
+\begin_layout Paragraph
+Forward filter algorithm (Kalman++ Eden et al 2004)
+\end_layout
+
+\begin_layout Standard
+The development of the forward filter starts the same.
+ The differences start when taking derivatives of 
+\begin_inset Formula $\lambda$
+\end_inset
+
+.
+ Here we introduce the changes.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\partial}{\partial\theta_{k,r,\alpha}}\rightarrow\left[W_{k|k}^{-1}\cdot\left(\theta_{k}-\theta_{k|k}\right)\right]_{r,\alpha}=\left[W_{k|k-1}^{-1}\cdot\left(\theta_{k}-\theta_{k|k-1}\right)\right]_{r,\alpha}-\sum_{l=1}^{T}\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta_{k,r}}\cdot\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+=\left[W_{k|k-1}^{-1}\cdot\left(\theta_{k}-\theta_{k|k-1}\right)\right]_{r,\alpha}-\sum_{l=\left(r-1\right)\frac{T}{R}}^{r\frac{T}{R}}\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]\cdot f\left(x_{k}\right)_{\alpha}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This should hold for 
+\begin_inset Formula $\theta_{k}=\theta_{k|k-1}$
+\end_inset
+
+ so we insert it and get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\theta_{k|k}=\theta_{k|k-1}+W_{k|k}\cdot\sum_{l=1}^{T}\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta_{k}}\cdot\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]=\theta_{k|k-1}+W_{k|k}\cdot\left(\begin{array}{c}
+\sum_{l=1}^{\frac{T}{R}}\left(n_{k}\left(l\right)-\lambda_{k}\left(l\right)\cdot\Delta\right)\cdot\overrightarrow{f}\left(x_{k}\right)\\
+.\\
+.\\
+\sum_{l=T\cdot\frac{R-1}{R}+1}^{T}\left(n_{k}\left(l\right)-\lambda_{k}\left(l\right)\cdot\Delta\right)\cdot\overrightarrow{f}\left(x_{k}\right)
+\end{array}\right)|_{\theta=\theta_{k|k-1}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Another derivative yields:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+W_{k|k}^{-1}=W_{k|k-1}^{-1}-\sum_{l=1}^{T}\left\{ \frac{\partial^{2}\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta^{2}}\cdot\left[n_{k}\left(l\right)-\lambda_{k}\left(l\right)\Delta\right]-\Delta\lambda_{k}\left(l\right)\cdot\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta}\cdot\left(\frac{\partial\log\left(\lambda_{k}\left(l\right)\right)}{\partial\theta}\right)^{T}\right\} |_{\theta=\theta_{k|k-1}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\left[W_{k|k}^{-1}\right]_{\left(a,\alpha\right),\left(b,\beta\right)}=\left[W_{k|k-1}^{-1}\right]_{\left(a,\alpha\right),\left(b,\beta\right)}+\Delta\cdot\delta_{ab}\sum_{l=\left(a-1\right)\frac{T}{R}+1}^{a\frac{T}{R}}\lambda_{k}\left(l\right)\cdot f_{\alpha}\left(x_{k}\right)\cdot f_{\beta}\left(x_{k}\right)|_{\theta=\theta_{k|k-1}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Smoothing algorithm (Kalman smoother)
+\end_layout
+
+\begin_layout Standard
+Here there are no changes.
+\end_layout
+
+\begin_layout Paragraph
+state space covariance algorithm (de Jong and Mackinnon 1988)
+\end_layout
+
+\begin_layout Standard
+Here there are no changes.
+\end_layout
+
+\begin_layout Subsubsection
+Calculating 
+\begin_inset Formula $\left\langle \exp\left(\theta\right)\right\rangle $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The last quantity we need to calculate in the E-step is 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $\int p\left(\theta|N,\psi'\right)\cdot\exp\left(\theta_{k,r}\right)d^{K}\theta$
+\end_inset
+
+.
+ Here we expand 
+\begin_inset Formula $\exp\theta_{k,r}$
+\end_inset
+
+ around 
+\begin_inset Formula $\theta_{k|K}$
+\end_inset
+
+ in a taylor series to the second order and get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\exp\left(\sum_{r,\alpha}\theta_{k,r,\alpha}g_{,r}\left(l\right)f\left(x_{k}\right)_{\alpha}\right)\approx\exp\left(\sum_{r,\alpha}\theta_{k|K,r,\alpha}g_{,r}\left(l\right)f\left(x_{k}\right)_{\alpha}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
++\left(\left(\theta_{k}-\theta_{k|K}\right)\cdot\nabla_{\theta}\right)\exp\left(\sum\theta gf\right)|_{\theta=\theta_{k|K}}+\frac{1}{2}\left(\theta_{k}-\theta_{k|K}\right)\left[\left(\theta_{k}-\theta_{k|K}\right)\nabla_{\theta}\left(\nabla_{\theta}\exp\sum\theta gf\right)\right]|_{\theta=\theta_{k|K}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and than take the expectation according to 
+\begin_inset Formula $\theta_{k}\sim N\left(\theta_{k|K},W_{k|K}\right)$
+\end_inset
+
+ and get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+E\left[\exp\left(\sum_{r,\alpha}\theta_{k,r,\alpha}g_{,r}\left(l\right)f\left(x_{k}\right)_{\alpha}\right)|N,\psi^{(i)}\right]\approx\exp\left(\sum_{\alpha}\theta_{k|K,r,\alpha}f\left(x_{k}\right)_{\alpha}\right)\cdot\left[1+\frac{1}{2}\sum_{\alpha,\beta}\left[W_{k|K}\right]_{\left(r,\alpha\right),\left(r,\beta\right)}\cdot f\left(x_{k}\right)_{\alpha}\cdot f\left(x_{k}\right)_{\beta}\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $r$
+\end_inset
+
+ is such that 
+\begin_inset Formula $g_{r}\left(l\right)=1$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+M-step
+\end_layout
+
+\begin_layout Paragraph
+Updating 
+\begin_inset Formula $\gamma$
+\end_inset
+
+ (Newton-Raphson)
+\end_layout
+
+\begin_layout Standard
+No change.
+\end_layout
+
+\begin_layout Paragraph
+Updating 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+No change.
+\end_layout
+
+\begin_layout Paragraph
+Updating 
+\begin_inset Formula $\theta_{0}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+No change.
+\end_layout
+
+\begin_layout Subsection
+Introducing learning algorithms
+\end_layout
+
+\begin_layout Standard
+Learning algorithms can be introduced via the drift term in the stochastic
+ waights update.
+ Our approach will be to iterate the optimization of the stochastic processes
+ with the updating of deterministic algorithmic properties (e.g.
+ learning rate) with the goal of minimizing the random components (e.g.
+ 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+s)
+\end_layout
+
+\begin_layout Subsection
+Appendices
+\end_layout
+
+\begin_layout Subsubsection
+Normal distribution
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p\left(\mathbf{x}\right)=\left(2\pi\right)^{-\frac{d}{2}}\left|\mathbf{P}\right|^{-\frac{1}{2}}\exp\left[-\frac{1}{2}\left(\mathbf{x}-\mathbf{\mu}\right)^{T}\mathbf{P}^{-1}\left(\mathbf{x}-\mathbf{\mu}\right)\right]
+\end{equation}
+
+\end_inset
+
+Where the mean is 
+\begin_inset Formula $\mathbf{\mu}$
+\end_inset
+
+ and the covariance matrix is 
+\begin_inset Formula $P_{ij}=cov\left(x_{i},x_{j}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+The convolution of gaussians
+\end_layout
+
+\begin_layout Standard
+We want to compute 
+\begin_inset Formula $\int p\left(\theta_{k}|\theta_{k-1},\psi^{(i)}\right)p\left(\theta_{k-1}|N_{1:k-1},\psi^{(i)}\right)d\theta_{k-1}\sim\int\exp\left(-\frac{1}{2}\frac{\left(\theta_{k}-\theta_{k-1}\right)^{2}}{2\Sigma}\right)\otimes\exp\left(-\frac{1}{2}\frac{\left(\theta_{k-1}-\theta_{k-1|k-1}\right)^{2}}{2W_{k-1|k-1}}\right)d\theta_{k-1}=\int\exp\left(-\frac{1}{2}\frac{\left(u+\theta_{k-1|k-1}-\theta_{k}\right)^{2}}{2\Sigma}\right)\otimes\exp\left(-\frac{1}{2}\frac{u^{2}}{2W_{k-1|k-1}}\right)du$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A simple fourier analysis (namely, the fact that the charachteristic function
+ of the normal distribution 
+\begin_inset Formula $N\left(\mu,\Sigma\right)$
+\end_inset
+
+ is 
+\begin_inset Formula $\exp\left(i\mu^{T}t-\frac{1}{2}t^{T}\Sigma t\right)$
+\end_inset
+
+ ) shows that the result is also Gaussian with mean 
+\begin_inset Formula $\theta_{k-1|k-1}$
+\end_inset
+
+ and variance 
+\begin_inset Formula $W_{k-1|k-1}+\Sigma$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Matrix equalities
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $P,R,M$
+\end_inset
+
+ be square matrices (reversible)
+\end_layout
+
+\begin_layout Paragraph
+Eq1: 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left(I+PM^{T}R^{-1}M\right)^{-1}=I-PM^{T}\left(MPM^{T}+R\right)^{-1}M$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We simply check: 
+\begin_inset Formula $\left(I+PM^{T}R^{-1}M\right)\cdot\left(I-PM^{T}\left(MPM^{T}+R\right)^{-1}M\right)=I+PM^{T}R^{-1}M-PM^{T}\left(MPM^{T}+R\right)^{-1}M-PM^{T}R^{-1}MPM^{T}\left(MPM^{T}+R\right)^{-1}M=I+PM^{T}R^{-1}\left(MPM^{T}+R-R-MPM^{T}\right)\left(MPM^{T}+R\right)^{-1}M=I$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Eq2:
+\end_layout
+
+\begin_layout Standard
+Multiply by 
+\begin_inset Formula $P$
+\end_inset
+
+ from the right and get: 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left(I+PM^{T}R^{-1}M\right)^{-1}P=P-PM^{T}\left(MPM^{T}+R\right)^{-1}MP$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Eq3:
+\end_layout
+
+\begin_layout Standard
+Multiply by 
+\begin_inset Formula $M^{T}R^{-1}$
+\end_inset
+
+ from the right:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left(I+PM^{T}R^{-1}M\right)^{-1}PM^{T}R^{-1}=PM^{T}R^{-1}-PM^{T}\left(MPM^{T}+R\right)^{-1}MPM^{T}R^{-1}=PM^{T}\left(I-\left(MPM^{T}+R\right)^{-1}MPM^{T}\right)R^{-1}=PM^{T}\left(MPM^{T}+R\right)^{-1}\left(MPM^{T}+R-MPM^{T}\right)R^{-1}=PM^{T}\left(MPM^{T}+R\right)^{-1}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Eq4:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left(I+PM^{T}R^{-1}M\right)^{-1}P=\left(P^{-1}+M^{T}R^{-1}M\right)^{-1}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Proof: Take 
+\begin_inset Formula $()^{-1}$
+\end_inset
+
+ from the left side, 
+\begin_inset Formula $\left[\left(I+PM^{T}R^{-1}M\right)^{-1}P\right]^{-1}=P^{-1}\cdot\left(I+PM^{T}R^{-1}M\right)=P^{-1}+M^{T}R^{-1}M$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Paragraph
+Eq5:
+\end_layout
+
+\begin_layout Standard
+Since the left hand side of #4 and #2 is the same we get 
+\begin_inset Formula $\left(P^{-1}+M^{T}R^{-1}M\right)^{-1}=P-PM^{T}\left(MPM^{T}+R\right)^{-1}MP$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Eq6:
+\end_layout
+
+\begin_layout Standard
+Similarly, we insert Eq #4 into #3 and get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left(P^{-1}+M^{T}R^{-1}M\right)^{-1}M^{T}R^{-1}=\left(I+PM^{T}R^{-1}M\right)^{-1}PM^{T}R^{-1}=PM^{T}\left(MPM^{T}+R\right)^{-1}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Orthogonal projection of random variables
+\end_layout
+
+\begin_layout Standard
+We can treat functions of random variables as inner product vector spaces.
+ More specifically we define the 
+\begin_inset Formula $\sigma$
+\end_inset
+
+-algebra of a random variable 
+\begin_inset Formula $X$
+\end_inset
+
+ as:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\sigma\left(X\right)=span\left\{ \delta_{x_{1}}\left(X\right),...,\delta_{x_{n}}\left(X\right)\right\} 
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with 
+\begin_inset Formula $A=\left\{ x_{1},...,x_{n}\right\} $
+\end_inset
+
+ being the possible values of 
+\begin_inset Formula $X$
+\end_inset
+
+ and 
+\begin_inset Formula $\delta_{x_{i}}\left(X\right)=\begin{cases}
+\begin{array}{c}
+1\\
+0
+\end{array} & \begin{array}{c}
+X=x_{i}\\
+X\ne x_{i}
+\end{array}\end{cases}$
+\end_inset
+
+ is an indicator function.
+\end_layout
+
+\begin_layout Standard
+Defining the inner product, 
+\begin_inset Formula $\left\langle X,Y\right\rangle =E\left(XY\right)$
+\end_inset
+
+, we see that 
+\begin_inset Formula $\left\{ \delta_{x_{i}}\left(X\right)\right\} _{i=1}^{n}$
+\end_inset
+
+ is an orthogonal basis of 
+\begin_inset Formula $\sigma\left(X\right)$
+\end_inset
+
+.
+ Also, by definition 
+\begin_inset Formula $\left\langle \delta_{x_{i}}\left(X\right),\delta_{y_{j}}\left(Y\right)\right\rangle =P\left(X=x_{i},Y=y_{j}\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The orthogonal projection of 
+\begin_inset Formula $\delta_{x_{i}}\left(X\right)$
+\end_inset
+
+ on 
+\begin_inset Formula $\sigma\left(Y\right)$
+\end_inset
+
+ is thus 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\sum_{j=1}^{m}\frac{\left\langle \delta_{x_{i}}\left(X\right),\delta_{y_{j}}\left(Y\right)\right\rangle }{\left\langle \delta_{y_{j}}\left(Y\right),\delta_{y_{j}}\left(Y\right)\right\rangle }\delta_{y_{j}}\left(Y\right)=\sum_{j=1}^{m}\frac{\left\langle \delta_{x_{i}}\left(X\right),\delta_{y_{j}}\left(Y\right)\right\rangle }{\left\langle \delta_{y_{j}}\left(Y\right)\right\rangle }\delta_{y_{j}}\left(Y\right)=E\left(\delta_{x_{i}}\left(X\right)|Y\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and this holds true to any function of 
+\begin_inset Formula $X$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Paragraph
+Example 1 (conditional expectance):
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $\sigma_{L}\left(Y\right)=span\left\{ Y-E\left(Y\right),1\right\} $
+\end_inset
+
+ (an orthogonal basis).
+ This means that projecting 
+\begin_inset Formula $X$
+\end_inset
+
+ on 
+\begin_inset Formula $\sigma_{L}\left(Y\right)$
+\end_inset
+
+ gives 
+\begin_inset Formula $Cov\left(X,Y\right)\cdot Var\left(Y\right)^{-1}\cdot\left(Y-E\left(Y\right)\right)+E\left(X\right)$
+\end_inset
+
+.
+ If X,Y are jointly normal this results holds for 
+\begin_inset Formula $\sigma\left(Y\right)$
+\end_inset
+
+ itself and we get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+E\left(X|Y\right)=E\left(X\right)+Cov\left(X,Y\right)\cdot Var\left(Y\right)^{-1}\cdot\left(Y-E\left(Y\right)\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Example 2 (orthogonality):
+\end_layout
+
+\begin_layout Standard
+As in any vector orthogonal projection we get that 
+\begin_inset Formula $X-Cov\left(X,Y\right)\cdot Var\left(Y\right)^{-1}\cdot\left(Y-E\left(Y\right)\right)$
+\end_inset
+
+ is orthogonal to 
+\begin_inset Formula $Y-E\left(Y\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Paragraph
+Example 3 (uncorrelated variables):
+\end_layout
+
+\begin_layout Standard
+Let Y,Z be uncorrelated (
+\begin_inset Formula $Cov\left(Y,Z\right)=0$
+\end_inset
+
+).
+ The projection of X on 
+\begin_inset Formula $\left(Y,Z\right)-\left\langle \left(Y,Z\right)\right\rangle $
+\end_inset
+
+ is 
+\begin_inset Formula $\left(Cov\left(X,Y\right),Cov\left(X,Z\right)\right)\cdot Var\left(Y,Z\right)^{-1}\cdot\left(\begin{array}{c}
+Y-E\left(Y\right)\\
+Z-E\left(Z\right)
+\end{array}\right)$
+\end_inset
+
+
+\begin_inset Formula $=Cov\left(X,Y\right)\cdot Var\left(Y\right)^{-1}\cdot\left(Y-E\left(Y\right)\right)+Cov\left(X,Z\right)\cdot Var\left(Z\right)^{-1}\cdot\left(Z-E\left(Z\right)\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Example 4 
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $E\left(YZ\right)=\left\langle Y,Z\right\rangle =0$
+\end_inset
+
+ then the projection of X on Y,Z is 
+\begin_inset Formula $\left(\left\langle X,Y\right\rangle ,\left\langle X,Z\right\rangle \right)\cdot\left(\begin{array}{cc}
+\left\langle Y,Y\right\rangle  & \left\langle Z,Y\right\rangle \\
+\left\langle Z,Y\right\rangle  & \left\langle Z,Z\right\rangle 
+\end{array}\right)^{-1}\cdot\left(\begin{array}{c}
+Y\\
+Z
+\end{array}\right)=\left\langle X,Y\right\rangle \cdot\left\langle Y,Y\right\rangle ^{-1}\cdot Y+\left\langle X,Z\right\rangle \cdot\left\langle Z,Z\right\rangle ^{-1}\cdot Z$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Orthogonal projection and discrete optimal linear smoothing (Meditch 1967)
+\end_layout
+
+\begin_layout Standard
+Let:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{array}[t]{c}
+x_{k+1}=\phi_{k+1,k}\cdot x_{k}+u_{k}\\
+z_{k}=H_{k}\cdot x_{k}+\nu_{k}
+\end{array}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+define the dynamics and observation process.
+ 
+\begin_inset Formula $x_{k}\in\mathbb{R}^{n},z_{k}\in\mathbb{R}^{m},\phi\in\mathbb{R}^{n\times n},H\in\mathbb{R}^{m\times m}$
+\end_inset
+
+ and 
+\begin_inset Formula $\left\langle u_{j}u_{k}^{T}\right\rangle =Q_{k}\cdot\delta_{kj},\left\langle \nu_{j}\nu_{k}^{T}\right\rangle =R_{k}\cdot\delta_{kj}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Also, 
+\begin_inset Formula $\left\langle x_{0}\right\rangle =0$
+\end_inset
+
+ and 
+\begin_inset Formula $\left\langle x_{0}x_{0}^{T}\right\rangle =P_{0}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subparagraph
+Estimation
+\end_layout
+
+\begin_layout Standard
+The estimation of 
+\begin_inset Formula $x_{k}$
+\end_inset
+
+ using data points 1...j is 
+\begin_inset Formula $\hat{x}_{k|j}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subparagraph
+Error
+\end_layout
+
+\begin_layout Standard
+The estimation error is 
+\begin_inset Formula $\widetilde{x}_{k|j}=x_{k}-\hat{x}_{k|j}$
+\end_inset
+
+.
+ An optimal estimation minimizes the squared error 
+\begin_inset Formula $\left\langle \widetilde{x}_{k|j}^{2}\right\rangle $
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\hat{x}_{k|j}$
+\end_inset
+
+ is a member of the vector space 
+\begin_inset Formula $Y_{j}=\left\{ \sum_{i=1}^{j}B_{i}z_{i}|B_{i}\in\mathbb{R}^{n\times m}\right\} $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Orthogonal projections
+\end_layout
+
+\begin_layout Standard
+Define the orthogonal projection of 
+\begin_inset Formula $x_{k}$
+\end_inset
+
+ on 
+\begin_inset Formula $Y_{j}$
+\end_inset
+
+ as 
+\begin_inset Formula $\bar{x}_{k|j}$
+\end_inset
+
+ and it follows:
+\end_layout
+
+\begin_layout Standard
+- 
+\begin_inset Formula $x_{k}-\bar{x}_{k|j}\bot Y_{j}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+- if 
+\begin_inset Formula $x_{k}-\zeta\bot Y_{j}$
+\end_inset
+
+ and 
+\begin_inset Formula $\zeta\in Y_{j}$
+\end_inset
+
+ then 
+\begin_inset Formula $\zeta=\bar{x}_{k|j}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Theorem 1:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\bar{x}_{k|j}=\hat{x}_{k|j}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Proof 1:
+\end_layout
+
+\begin_layout Standard
+- 
+\begin_inset Formula $\hat{x}_{k|j}\in Y_{j}$
+\end_inset
+
+ by definition
+\end_layout
+
+\begin_layout Standard
+- Rewrite 
+\begin_inset Formula $\left\langle \left(x_{k}-\hat{x}_{k|j}\right)^{2}\right\rangle =\left\langle \left(x_{k}-\bar{x}_{k|j}\right)^{2}\right\rangle +2\cdot\left\langle \left(x_{k}-\bar{x}_{k|j}\right)\cdot\left(\bar{x}_{k|j}-\hat{x}_{k|j}\right)\right\rangle +\left(\bar{x}_{k|j}-\hat{x}_{k|j}\right)^{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The middle part is zero by the orthogonality of 
+\begin_inset Formula $\left(x_{k}-\bar{x}_{k|j}\right)$
+\end_inset
+
+ to all members of the vector space 
+\begin_inset Formula $Y_{j}$
+\end_inset
+
+ (including 
+\begin_inset Formula $\left(\bar{x}_{k|j}-\hat{x}_{k|j}\right)$
+\end_inset
+
+) and the last part is non-negative.
+\end_layout
+
+\begin_layout Standard
+From the optimality of 
+\begin_inset Formula $\hat{x}_{k|j}$
+\end_inset
+
+ we conclude that 
+\begin_inset Formula $\bar{x}_{k|j}=\hat{x}_{k|j}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subparagraph
+Theorem 2 (Kalman):
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\hat{x}_{k+1|k}=\phi_{k+1,k}\cdot\hat{x}_{k}$
+\end_inset
+
+ and 
+\begin_inset Formula $M_{k+1}=\phi_{k,k+1}P_{k}\phi_{k,k+1}^{T}+Q_{k}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with the covariance matrix 
+\begin_inset Formula $M_{k+1}=\left\langle \tilde{x}_{k+1|k}\cdot\tilde{x}_{k+1|k}^{T}\right\rangle $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Define
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\hat{z}_{k|j}=H_{k}\cdot\hat{x}_{k|j}$
+\end_inset
+
+ and 
+\begin_inset Formula $\tilde{z}_{k|j}=z_{k}-\hat{z}_{k|j}$
+\end_inset
+
+ and the vector space 
+\begin_inset Formula $Z_{k+1}=\left\{ K_{k+1}\cdot\tilde{z}_{k+1|k}|K\in\mathbb{R}^{n\times m}\right\} $
+\end_inset
+
+ and get
+\end_layout
+
+\begin_layout Subparagraph
+Lemma:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $Z_{k+1}$
+\end_inset
+
+is orthogonal to 
+\begin_inset Formula $Y_{k}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subparagraph
+Proof:
+\end_layout
+
+\begin_layout Standard
+consider the basic vector 
+\begin_inset Formula $\tilde{z}_{k+1|k}=z_{k+1}-H_{k+1}\phi_{k+1,k}\hat{x}_{k}$
+\end_inset
+
+(Kalman) which can be expanded to 
+\begin_inset Formula $=H_{k+1}x_{k+1}+\nu_{k+1}-H_{k+1}\phi_{k+1,k}\hat{x}_{k}=H_{k+1}\phi_{k+1k}\cdot\left(x_{k}-\hat{x}_{k}\right)+H_{k+1}u_{k}+\nu_{k+1}$
+\end_inset
+
+.
+ Now, 
+\begin_inset Formula $u_{k}$
+\end_inset
+
+ and 
+\begin_inset Formula $\nu_{k+1}$
+\end_inset
+
+ are gaussian with mean zero and are trivially orthogonal to 
+\begin_inset Formula $Y_{k}$
+\end_inset
+
+ and 
+\begin_inset Formula $x_{k}-\hat{x}_{k}$
+\end_inset
+
+ is orthogonal to 
+\begin_inset Formula $Y_{k}$
+\end_inset
+
+ from Theorem 1.
+\end_layout
+
+\begin_layout Subsection
+References
+\end_layout
+
+\begin_layout Standard
+\begin_inset Quotes eld
+\end_inset
+
+Stochastic processes and filtering theory
+\begin_inset Quotes erd
+\end_inset
+
+ - Andrew H.Jazwinski (AP 1970 Vol 64)
+\end_layout
+
+\end_body
+\end_document
